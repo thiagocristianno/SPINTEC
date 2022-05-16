@@ -1,0 +1,700 @@
+USE [BKP_MEDICAL]
+GO
+
+/****** Object:  Trigger [dbo].[TT_RESERVATIONS_TMP_INSERT_new]    Script Date: 19/04/2022 10:27:50 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER TRIGGER [dbo].[TT_RESERVATIONS_TMP_INSERT_new] 
+ON [dbo].[TT_RESERVATIONS_TMP]
+AFTER INSERT
+AS
+BEGIN -- INICIO TRIGGER 
+
+DECLARE
+	   @APP_TMP_ID VARCHAR(50)
+      ,@APP_LID VARCHAR(50)
+      ,@APP_TID VARCHAR(50)
+      ,@APP_ACTION VARCHAR(10)
+      ,@APP_DATE DATETIME
+      ,@APP_START_TIME VARCHAR(5)
+      ,@APP_END_TIME VARCHAR(5)
+      ,@APP_PRICE VARCHAR(20)
+      ,@USER_LID VARCHAR(50)
+      ,@USER_TID VARCHAR(50)
+      ,@USER_FIRST_NAME VARCHAR(50)
+      ,@USER_SECOND_NAME VARCHAR(50)
+      ,@USER_THIRD_NAME VARCHAR(50)
+      ,@USER_ID_NUMBER VARCHAR(50)
+      ,@USER_LANDLINE_PHONE VARCHAR(50)
+      ,@USER_MOBILE_PHONE VARCHAR(50)
+      ,@USER_EMAIL VARCHAR(50)
+      ,@USER_DATE_OF_BIRTH VARCHAR(10)
+      ,@USER_GENDER VARCHAR(10)
+      ,@USER_ZIP_CODE VARCHAR(10)
+      ,@USER_WORK_PHONE VARCHAR(50)
+      ,@USER_NOTES VARCHAR(500)
+      ,@USER_LANGUAGE VARCHAR(10)
+      ,@RESOURCE_LID VARCHAR(50)
+      ,@ACTIVITY_LID VARCHAR(50)
+      ,@INSURANCE_LID VARCHAR(50)
+      ,@LOCATION_LID VARCHAR(50)
+      ,@STATUS VARCHAR(50)
+      ,@NOTES VARCHAR(500)
+      ,@APP_OWNER_LID VARCHAR(50)
+      ,@APP_OWNER_TID VARCHAR(50)
+      ,@APP_OWNER_NAME VARCHAR(50)
+      ,@STATUS_TRIGGER VARCHAR(4000)
+      ,@INSERT_TIME DATETIME
+      ,@APP_CUSTOM_0 VARCHAR(500)
+      ,@APP_CUSTOM_1 VARCHAR(500)
+      ,@APP_CUSTOM_2 VARCHAR(500)
+      ,@APP_CUSTOM_3 VARCHAR(500)
+      ,@APP_CUSTOM_4 VARCHAR(500)
+	  ,@STATUS_AGENDA VARCHAR(50)
+
+	  ,@PACIENTEID INT
+	  ,@HORREQID INT
+
+	  ,@LIVRO VARCHAR(50)
+	  ,@HORA VARCHAR(50)
+
+
+	  ,@LIVRO_OLD VARCHAR(50)
+	  ,@HORA_OLD VARCHAR(50)
+	  ,@UNIDADE_OLD VARCHAR(50)
+	  ,@DATA_OLD DATETIME
+	  
+SELECT
+      @APP_TMP_ID = APP_TMP_ID,
+      @APP_LID = APP_LID,
+      @APP_ACTION = APP_ACTION,
+      @APP_TID = APP_TID ,
+      @APP_DATE = CONVERT(DATE,APP_DATE, 103),
+	  @APP_START_TIME = APP_START_TIME,
+      @APP_END_TIME = APP_END_TIME,
+      @APP_PRICE = APP_PRICE,
+      @STATUS = STATUS,
+      @NOTES = NOTES,
+      @USER_LID = USER_LID,
+      @USER_TID = USER_TID,
+      @USER_FIRST_NAME= USER_FIRST_NAME,
+      @USER_SECOND_NAME= USER_SECOND_NAME,
+      @USER_THIRD_NAME = USER_THIRD_NAME,
+      @USER_ID_NUMBER= USER_ID_NUMBER,
+      @USER_LANDLINE_PHONE= USER_LANDLINE_PHONE,
+      @USER_MOBILE_PHONE = USER_MOBILE_PHONE,
+      @USER_EMAIL = USER_EMAIL,
+      @USER_DATE_OF_BIRTH = CONVERT(DATE, USER_DATE_OF_BIRTH, 103),
+      @USER_GENDER = USER_GENDER,
+      @USER_ZIP_CODE= USER_ZIP_CODE,
+      @USER_LANGUAGE= USER_LANGUAGE,
+      @ACTIVITY_LID = ACTIVITY_LID,
+      @RESOURCE_LID = RESOURCE_LID,
+      @LOCATION_LID = LOCATION_LID,
+      @INSURANCE_LID = INSURANCE_LID,
+      @APP_OWNER_LID = APP_OWNER_LID,
+      @APP_OWNER_TID = APP_OWNER_TID,
+      @APP_OWNER_NAME= APP_OWNER_NAME,
+      @STATUS_TRIGGER= STATUS_TRIGGER,
+      @INSERT_TIME= INSERT_TIME,	  
+	  @HORREQID = (SELECT MAX(HORREQID)+ 1 FROM HORARIOS),
+	  @APP_CUSTOM_0 = APP_CUSTOM_0,
+	  @APP_CUSTOM_1 = APP_CUSTOM_1,
+	  @APP_CUSTOM_2 = APP_CUSTOM_2	 
+FROM INSERTED;
+
+
+	SET @LIVRO = PARSENAME(SUBSTRING(replace(@APP_LID, '_','.'), 7,20), 4)
+	SET @HORA = PARSENAME(SUBSTRING(replace(@APP_LID, '_','.'), 7,20), 3)
+
+
+
+
+IF (SELECT count (1) FROM PACIENTE WHERE PACIENTEID = CAST (@USER_LID AS INT)) = 0
+BEGIN
+
+	IF (SELECT COUNT(1) FROM PACIENTE WHERE DATANASC  = @USER_DATE_OF_BIRTH AND DOCUMENTO = @USER_ID_NUMBER) = 0	
+	BEGIN
+
+		  --SET @user_lid_int = (SELECT MAX(PACIENTEID + 1) FROM PACIENTE)
+		  --SET @user_lid_new = CAST(@user_lid_int AS VARCHAR(20))
+
+
+INSERT INTO PACIENTE(
+		 [UNIDADEID]
+		,[PACIENTEID]
+		,[NOME]
+		,[CONTROLE]
+		,[DATANASC]
+		,[IDADE]
+		,[SEXO]
+		,[DOCUMENTO]
+		,[ESTADOCIVIL]
+		,[DUM]
+		,[PESO]
+		,[ALTURA]
+		,[ENDERECO]
+		,[NUMERO]
+		,[COMPLEMENTO]
+		,[BAIRRO]
+		,[CIDADE]
+		,[ESTADO]
+		,[CEP]
+		,[CONFIGURAVEL1]
+		,[CONFIGURAVEL2]
+		,[CONFIGURAVEL3]
+		,[EMAIL]
+		,[CONVENIOID]
+		,[TITULAR]
+		,[MATRICULA]
+		,[DATACADASTRO]
+		,[DATAATUALIZADO]
+		,[PLANOID]
+		,[DDD]
+		,[TELEFONE]
+		,[TELEFONETIPO]
+		,[NOME_FONETICO]
+		,[MATRICULA_ASSOCIADO]
+		,[CONVENIOASSOCIADOID]
+		,[FRANQUIA_ASSOCIADOID]
+		,[EXCLUIDO]
+		,[USERDELID]
+		,[USERCOMPUDEL]
+		,[DATADEL]
+		,[INTERNET]
+		,[VENC_CARTEIRINHA]
+		,[RECEPCIONADO]
+		,[TIPODOCID]
+		,[GESTANTE]
+		,[STATUS]
+		,[FOTO]
+		,[OBSERVACAO]
+		,[CONFIGURAVEL4]
+		,[CONFIGURAVEL5]
+		,[CONFIGURAVEL6]
+		,[CONFIGURAVEL7]
+		,[OBSID]
+		,[OBSDEL]
+		,[PACIENTEDAAGENDA]
+		,[NOME1]
+		,[NOME2]
+		,[NOME3]
+		,[INTERNET_MEDICO]
+		,[TIPOTELEFONEID]
+		,[NOME_SOCIAL]		
+)
+VALUES
+(
+		 0 --UNIDADEID, int,>
+		,(SELECT MAX(PACIENTEID + 1) FROM PACIENTE)--<PACIENTEID, int,>
+		,@USER_FIRST_NAME + ' '+ @USER_SECOND_NAME --<NOME, varchar(0),>
+		,NULL--<CONTROLE, varchar(20),
+		,@USER_DATE_OF_BIRTH
+		,NULL--<IDADE, int,>
+		,@USER_GENDER--<SEXO, varchar(1),>
+		,@USER_ID_NUMBER --<DOCUMENTO, varchar(40),>
+		,NULL--<ESTADOCIVIL, varchar(10),>
+		,'1900-01-01 00:00:00.000'--<DUM, datetime,>
+		,80--<PESO, float,>
+		,0--<ALTURA, float,>
+		,NULL--<ENDERECO, varchar(60),>
+		,NULL--<NUMERO, varchar(6),>
+		,NULL--<COMPLEMENTO, varchar(30),>
+		,NULL--<BAIRRO, varchar(30),>
+		,NULL--<CIDADE, varchar(30),>
+		,NULL--<ESTADO, varchar(2),>
+		,@USER_ZIP_CODE--  <CEP, varchar(9),>
+		,' '--<CONFIGURAVEL1, char(255),>
+		,@USER_MOBILE_PHONE --<CONFIGURAVEL2, char(255),>
+		,'04'--<CONFIGURAVEL3, char(255),>
+		,@USER_EMAIL--<EMAIL, varchar(100),>
+		,PARSENAME(replace(cast(@INSURANCE_LID  as varchar), '_','.'), 3)  --<CONVENIOID, int,>
+		,@USER_FIRST_NAME + ' '+ @USER_SECOND_NAME --<TITULAR, varchar(60),>
+		,'666666'--<MATRICULA, varchar(30),>
+		,GETDATE() --<DATACADASTRO, datetime,>
+		,GETDATE() --<DATAATUALIZADO, datetime,>
+		,CAST(PARSENAME(replace(CAST(@INSURANCE_LID AS VARCHAR), '_','.'), 1)AS varchar) --<PLANOID, int,>
+		,'37'--<DDD, varchar(5),>
+		,@USER_LANDLINE_PHONE --<TELEFONE, varchar(20),>
+		,'L' --<TELEFONETIPO, varchar(10),>
+		,NULL--<NOME_FONETICO, varchar(60),>
+		,' '--<MATRICULA_ASSOCIADO, varchar(30),>
+		,NULL--<CONVENIOASSOCIADOID, int,>
+		,NULL--<FRANQUIA_ASSOCIADOID, int,>
+		,'F' --<EXCLUIDO, varchar(1),>
+		,NULL--<USERDELID, int,>
+		,NULL--<USERCOMPUDEL, varchar(15),>
+		,NULL--<DATADEL, datetime,>
+		,'T'--<INTERNET, varchar(1),>
+		,' '--<VENC_CARTEIRINHA, datetime,>
+		,NULL--<RECEPCIONADO, char(1),>
+		,2--<TIPODOCID, int,>
+		,'F'--<GESTANTE, char(1),>
+		,'A'--<STATUS, char(1),>
+		,'0X20'--<FOTO, image,>
+		,NULL--<OBSERVACAO, text,>
+		,NULL--<CONFIGURAVEL4, char(255),>
+		,NULL--<CONFIGURAVEL5, char(255),>
+		,NULL--<CONFIGURAVEL6, char(255),>
+		,NULL--<CONFIGURAVEL7, char(255),>
+		,0 --<OBSID, int,>
+		,' '--<OBSDEL, text,>
+		,'F'--<PACIENTEDAAGENDA, char(1),>
+		,NULL--<NOME1, varchar(30),>
+		,NULL--<NOME2, varchar(30),>
+		,NULL--<NOME3, varchar(30),>
+		,'T'--<INTERNET_MEDICO, char(1),>
+		,1--<TIPOTELEFONEID, int,>
+		,NULL--<NOME_SOCIAL, varchar(60),>
+      
+)
+END; -- FIM CADASTRO DE PACIENTTE
+END; -- FIM SE PACIENTE NAO EXISTE	
+
+
+
+
+SET @PACIENTEID = (SELECT TOP 1 PACIENTEID FROM PACIENTE WHERE   DATANASC  = @USER_DATE_OF_BIRTH AND DOCUMENTO = @USER_ID_NUMBER AND EMAIL = @USER_EMAIL)	
+
+/*INICIO ADD*/
+IF @APP_ACTION='ADD'
+BEGIN			
+--IF @user_exist = 1 ]
+	PRINT @APP_ACTION;
+
+SET @STATUS_AGENDA = (SELECT  
+TOP 1 A.STATUS 
+FROM HORARIOS A WHERE  
+A.HORA = @HORA 
+AND DATA =  @APP_DATE 
+AND A.LIVROID = @LIVRO)
+
+
+PRINT @LIVRO;
+/*INICIO AGENDA LIBERADA*/
+IF @STATUS_AGENDA = 'L'
+BEGIN
+PRINT 'AQUI';
+UPDATE HORARIOS SET			
+		  [LIVROID]	= @LIVRO--(SELECT TOP 1 AUX.COL1 AS LIVRO FROM ##AUX_2 AUX INNER JOIN TT_RESERVATIONS_TMP T ON AUX.APP_LID = T.APP_LID)--@app_lid --(<LIVROID int > -- VERIFICAR COMO NA TT_RESERVATION VAMOS PEGAR SÓ O LIVRO
+		 ,[DATA]	= @APP_DATE --<DATA datetime >
+		 ,[HORA]	=  @HORA--(SELECT TOP 1 AUX.COL2 AS LIVRO FROM ##AUX_2 AUX INNER JOIN TT_RESERVATIONS_TMP T ON AUX.APP_LID = T.APP_LID) --@APP_LID --cast(@app_start_time as INT) --<HORA int >
+		 ,[CONTADOR]	= 0--<CONTADOR int >
+		 ,[MEDREAID]	= CASE WHEN CAST(PARSENAME(replace(@RESOURCE_LID, '_','.'), 2) AS int)  > 0 THEN CAST(PARSENAME(replace(@RESOURCE_LID, '_','.'), 2) AS int)  ELSE CAST(PARSENAME(replace(@RESOURCE_LID, '_','.'), 1) AS int) END--<MEDREAID int >
+		 ,[HORREQID]	= @HORREQID--(SELECT TOP 1 AUX.COL3 AS LIVRO FROM ##AUX_2 AUX INNER JOIN TT_RESERVATIONS_TMP T ON AUX.APP_LID = T.APP_LID) --CAST(@app_lid AS int)--<HORREQID int >
+		 ,[ENCAIXE]	= 'F'--<ENCAIXE varchar(1) >
+		 ,[COMPARECEU]= 'F'--<COMPARECEU varchar(1) >
+		 ,[PREFAGEID]= '19'--<PREFAGEID int >
+		 ,[STATUS] = 'O'--<STATUS varchar(1) >
+		 ,[MOTIVOBLOQUEIO] = ''--<MOTIVOBLOQUEIO varchar(60) >
+		 ,[MASTERHORA] =	 NULL--<MASTERHORA int >
+		 ,[DUPLICAR]	= 'T'--<DUPLICAR varchar(1) >
+		 ,[RESHORA]	= GETDATE()--<RESHORA datetime >
+		 ,[RESUSUARIO] = 'tuotempo'--<RESUSUARIO varchar(60) >
+		 ,[USUARIO] = 482--<USUARIO int >
+		 ,[CONFIRMADO] = 'F'--<CONFIRMADO varchar(1) >
+		 ,[ULTIMO_USUARIO] = 482--<ULTIMO_USUARIO int >
+		 ,[CONFIRMOU_USUARIO] = NULL--<CONFIRMOU_USUARIO int >
+		 --,[EQUIPAMENTOID] = @location_lid--<EQUIPAMENTOID int >
+		 ,[HORACHEGOU] = NULL--<HORACHEGOU int >
+		 ,[REALIZADO] = 'F'--<REALIZADO varchar(1) >
+		 ,[CONFIRMOU_DATA] = NULL--<CONFIRMOU_DATA datetime >
+		 ,[CONFIRMOU_HORA]= NULL--<CONFIRMOU_HORA int >
+		 ,[USUARIO_BLOQUEOU]	= NULL--<USUARIO_BLOQUEOU int >
+		 ,[USUARIO_DESBLOQUEOU]	= NULL--<USUARIO_DESBLOQUEOU int >
+		 ,[DATAULTIMAATUALIZACAO] = GETDATE()--<DATAULTIMAATUALIZACAO datetime >
+		 ,[HORAULTIMAATUALIZACAO] = ' ' -- VERIFICAR CONVERSAO @insert_time--<HORAULTIMAATUALIZACAO int >
+		 ,[observbloq] = 'insert'--<observbloq text >
+		 ,[obsid] =  NULL--<obsid int >
+		 ,[medintervalo]	= NULL--<medintervalo int >
+		 ,[ANTECIPAR] =  'F'--<ANTECIPAR char(1) >
+		 ,[CONTADOR_INTERVALO] = 123--<CONTADOR_INTERVALO int >
+		 ,[INTERVALO] = 20--<INTERVALO int >
+		 from inserted I
+WHERE 
+		
+		LIVROID = @LIVRO AND
+		DATA = @APP_DATE AND
+		HORA = @HORA
+	    --I.STATUS = 'L'
+
+
+		
+INSERT INTO [dbo].[HORARIOSREQUISICAO]
+           ([UNIDADEID]
+           ,[HORREQID]
+           ,[DATAAGENDAMENTO]
+           ,[HORAAGENDAMENTO]
+           ,[PACIENTEID]
+           ,[DDD]
+           ,[FONE]
+           ,[FONETIPO]
+           ,[FAX]
+           ,[COMPLEMENTOID]
+           ,[GUIA]
+           ,[SENHAEXAME]
+           ,[MEDSOLID]
+           ,[UNIDADEPACIENTEID])
+     VALUES(
+         @LOCATION_LID, -- UNIDADEID 
+		 (SELECT MAX(HORREQID)+ 1 FROM HORARIOSREQUISICAO),-- PARSENAME(replace(@APP_LID, '_','.'), 1), --HORREQID
+		 @APP_DATE, -- DATAAGENDAMENTO
+		 @HORA, --HORAAGENDAMENTO 
+		 @PACIENTEID, --PACIENTEID 
+		 NULL, --DDD
+		 NULL, --FONE =
+		 NULL, -- FONETIPO 
+		 NULL, -- FAX
+		 2,--COMPLEMENTOID 
+		 ' ', --GUIA 
+		 ' ', --SENHAEXAME
+		 0, --MEDSOLID 
+		 0 -- UNIDADEPACIENTEID 		
+		)
+
+
+-- INSERINDO OBSERVACAO DO AGENDAMENTO	
+INSERT INTO [dbo].[HORARIOSDADOS]
+           ([LIVROID]
+           ,[DATA]
+           ,[HORA]
+           ,[CONTADOR]
+           ,[MEDSOLID]
+           ,[CONVENIOID]
+           ,[PLANOID]
+           ,[PROCEDENCIAID]
+           ,[OBS]
+           ,[OBSID]
+           ,[CONVENIOASSOCIADOID]
+           ,[FRANQUIAID])
+     VALUES
+           (
+		   @LIVRO--<LIVROID, int,>
+           ,@APP_DATE --<DATA, datetime,>
+           ,@HORA--<HORA, int,>
+           ,0--<CONTADOR, int,>
+           ,0--<MEDSOLID, int,>
+           ,PARSENAME(replace(@INSURANCE_LID, '_','.'), 3)--<CONVENIOID, int,>
+           ,PARSENAME(replace(@INSURANCE_LID, '_','.'), 1)--<PLANOID, int,>
+           ,11--<PROCEDENCIAID, int,>
+           ,'AGENDADO PELO TUOTEMPO'--<OBS, text,>
+           ,1--<OBSID, int,>
+           ,0--<CONVENIOASSOCIADOID, int,>
+           ,0--<FRANQUIAID, int,>
+		   )
+
+
+
+
+-- INSERINDO EXAME X HORARIOS
+
+INSERT INTO [dbo].[HORARIOSEXAMES]
+           ([LIVROID]
+           ,[DATA]
+           ,[HORA]
+           ,[CONTADOR]
+           ,[EXAMEINDICE]
+           ,[PROCID]
+           ,[GUIA]
+           ,[SENHA])
+     VALUES
+           (
+		   @LIVRO--<LIVROID, int,>
+           ,@APP_DATE --<DATA, datetime,>
+           ,@HORA--<HORA, int,>
+           ,0--<CONTADOR, int,>
+           ,0--<EXAMEINDICE, int,>
+           ,@ACTIVITY_LID--<PROCID, int,>
+           ,' '--<GUIA, varchar(30),>
+           ,' '--<SENHA, varchar(20),>
+		   )
+
+END;
+/*FIM AGENDA LIBERADA*/
+
+
+BEGIN
+IF @STATUS_AGENDA <> 'L'
+ROLLBACK 
+END
+
+END;
+/* FIM ADD*/
+
+
+/* INICIO UPDATE */	
+IF @APP_ACTION='UPDATE'
+BEGIN
+	 SET @LIVRO_OLD = (SELECT TOP 1 SUBSTRING(APP_LID, 7,2) FROM  TT_RESERVATIONS_TMP WHERE APP_TMP_ID=@APP_TMP_ID AND APP_LID!=@APP_LID ORDER BY INSERT_TIME DESC);
+	 SET @HORA_OLD = (SELECT TOP 1 SUBSTRING(APP_LID, 10,5) FROM  TT_RESERVATIONS_TMP WHERE APP_TMP_ID=@APP_TMP_ID AND APP_LID!=@APP_LID ORDER BY INSERT_TIME DESC);
+	 SET @UNIDADE_OLD = (SELECT TOP 1 SUBSTRING(APP_LID, 18,2) FROM  TT_RESERVATIONS_TMP WHERE APP_TMP_ID=@APP_TMP_ID AND APP_LID!=@APP_LID ORDER BY INSERT_TIME DESC);
+	 SET @DATA_OLD = (SELECT TOP 1 CONVERT(DATE,APP_DATE, 103) FROM  TT_RESERVATIONS_TMP WHERE APP_TMP_ID=@APP_TMP_ID AND APP_LID!=@APP_LID ORDER BY INSERT_TIME DESC);
+ 
+
+/*LIBERAR HORARIO ANTIGO*/
+UPDATE [dbo].[HORARIOS] SET
+		 [CONTADOR]	= 0--<CONTADOR int >
+		,[MEDREAID]	= ' '--CASE WHEN CAST(PARSENAME(replace(@resource_lid, '_','.'), 2) AS int)  > 0 THEN CAST(PARSENAME(replace(@resource_lid, '_','.'), 2) AS int)  ELSE CAST(PARSENAME(replace(@resource_lid, '_','.'), 1) AS int) END--<MEDREAID int >
+		,[HORREQID]	= NULL--<HORREQID int >
+		,[ENCAIXE]	= 'F'--<ENCAIXE varchar(1) >
+		,[COMPARECEU]= 'F'--<COMPARECEU varchar(1) >
+		,[PREFAGEID]= NULL--<PREFAGEID int >
+		,[STATUS] = 'L'--<STATUS varchar(1) >
+		,[MOTIVOBLOQUEIO] = ''--<MOTIVOBLOQUEIO varchar(60) >
+		,[MASTERHORA] = NULL--<MASTERHORA int >
+		,[DUPLICAR]	= 'T'--<DUPLICAR varchar(1) >
+		,[RESHORA]	= NULL--<RESHORA datetime >
+		,[RESUSUARIO] = NULL--<RESUSUARIO varchar(60) >
+		,[USUARIO] = NULL--<USUARIO int >
+		,[CONFIRMADO] = 'F'--<CONFIRMADO varchar(1) >
+		,[ULTIMO_USUARIO] = NULL--<ULTIMO_USUARIO int >
+		,[CONFIRMOU_USUARIO] = NULL--<CONFIRMOU_USUARIO int >
+		,[EQUIPAMENTOID] = @LOCATION_LID--<EQUIPAMENTOID int >
+		,[HORACHEGOU] = NULL--<HORACHEGOU int >
+		,[REALIZADO] = 'F'--<REALIZADO varchar(1) >
+		,[CONFIRMOU_DATA] = NULL--<CONFIRMOU_DATA datetime >
+		,[CONFIRMOU_HORA]= NULL--<CONFIRMOU_HORA int >
+		,[USUARIO_BLOQUEOU]	= NULL--<USUARIO_BLOQUEOU int >
+		,[USUARIO_DESBLOQUEOU]	= NULL--<USUARIO_DESBLOQUEOU int >
+		,[DATAULTIMAATUALIZACAO] = NULL--<DATAULTIMAATUALIZACAO datetime >
+		,[HORAULTIMAATUALIZACAO] = ' ' -- VERIFICAR CONVERSAO @insert_time--<HORAULTIMAATUALIZACAO int >
+		,[observbloq] = 'HORARIO ALTERADO'--<observbloq text >
+		,[obsid] =  NULL--<obsid int >
+		,[medintervalo]	= NULL--<medintervalo int >
+		,[ANTECIPAR] =  NULL--<ANTECIPAR char(1) >
+		,[CONTADOR_INTERVALO] = 121--<CONTADOR_INTERVALO int >
+		,[INTERVALO] = 20--<INTERVALO int >
+		FROM HORARIOS
+
+WHERE 
+LIVROID = @LIVRO_OLD
+AND HORA = @HORA_OLD
+AND DATA = @DATA_OLD 
+
+
+
+
+
+-- UPDATE HORARIOS DADOS
+UPDATE [dbo].[HORARIOSREQUISICAO] SET 
+	   [UNIDADEID] = @LOCATION_LID
+      ,[HORREQID] = @HORA
+      ,[DATAAGENDAMENTO] = @APP_DATE
+      ,[HORAAGENDAMENTO] = @HORA
+      ,[PACIENTEID] = @PACIENTEID
+      ,[DDD] = '061'
+      ,[FONE] = '9999877'
+      ,[FONETIPO] = NULL
+      ,[FAX] = NULL
+      ,[COMPLEMENTOID] = 2
+      ,[GUIA] = ' '
+      ,[SENHAEXAME] =' '
+      ,[MEDSOLID] = 0
+      ,[UNIDADEPACIENTEID] = 0
+FROM inserted
+WHERE
+HORREQID = @HORA_OLD
+AND DATAAGENDAMENTO = @DATA_OLD
+AND PACIENTEID = CAST(@USER_LID AS INT)
+AND UNIDADEID = @LOCATION_LID
+
+
+-- UPDATE HORARIOS DADOS
+UPDATE [dbo].[HORARIOSDADOS]
+SET 
+	   [LIVROID] = @LIVRO --<LIVROID, int,>
+      ,[DATA] = @APP_DATE --<DATA, datetime,>
+      ,[HORA] = @HORA--<HORA, int,>
+      ,[CONTADOR] = 0 -- <CONTADOR, int,>
+      ,[MEDSOLID] = 0 --<MEDSOLID, int,>
+      ,[CONVENIOID] = PARSENAME(replace(@INSURANCE_LID, '_','.'), 3)--<CONVENIOID, int,>
+      ,[PLANOID] = PARSENAME(replace(@INSURANCE_LID, '_','.'), 1)--<PLANOID, int,>
+      ,[PROCEDENCIAID] = 11 --<PROCEDENCIAID, int,>
+      ,[OBS] = 'REAGENDADO TUTEMPO' --<OBS, text,>
+      ,[OBSID] = 1 --<OBSID, int,>
+      ,[CONVENIOASSOCIADOID] = 0--<CONVENIOASSOCIADOID, int,>
+      ,[FRANQUIAID] = 0 --<FRANQUIAID, int,>
+WHERE 
+DATA = @DATA_OLD 
+AND HORA = @HORA_OLD 
+AND LIVROID=@LIVRO_OLD 
+
+
+-- ALTERANDO HORÁRIOS EXAMES
+
+UPDATE [dbo].[HORARIOSEXAMES]
+SET 
+	   [LIVROID] =@LIVRO-- PARSENAME(SUBSTRING(replace(@APP_LID, '_','.'), 7,20), 4)-- <LIVROID, int,>
+      ,[DATA] = @APP_DATE --<DATA, datetime,>
+      ,[HORA] = PARSENAME(SUBSTRING(replace(@APP_LID, '_','.'), 7,20), 3) --<HORA, int,>
+      ,[CONTADOR] = 0--<CONTADOR, int,>
+      ,[EXAMEINDICE] = 0-- <EXAMEINDICE, int,>
+      ,[PROCID] = @activity_lid--<PROCID, int,>
+      ,[GUIA] = ' '--<GUIA, varchar(30),>
+      ,[SENHA] = ' '--<SENHA, varchar(20),>
+WHERE
+DATA = @DATA_OLD 
+AND HORA = @HORA_OLD 
+AND LIVROID=@LIVRO_OLD
+
+
+
+
+/*RESERVAR HORARIO NOVO*/
+UPDATE HORARIOS SET			
+		  [LIVROID]	= @LIVRO--(SELECT TOP 1 AUX.COL1 AS LIVRO FROM ##AUX_2 AUX INNER JOIN TT_RESERVATIONS_TMP T ON AUX.APP_LID = T.APP_LID)--@app_lid --(<LIVROID int > -- VERIFICAR COMO NA TT_RESERVATION VAMOS PEGAR SÓ O LIVRO
+		 ,[DATA]	= @APP_DATE --<DATA datetime >
+		 ,[HORA]	=  @HORA--(SELECT TOP 1 AUX.COL2 AS LIVRO FROM ##AUX_2 AUX INNER JOIN TT_RESERVATIONS_TMP T ON AUX.APP_LID = T.APP_LID) --@APP_LID --cast(@app_start_time as INT) --<HORA int >
+		 ,[CONTADOR]	= 0--<CONTADOR int >
+		 ,[MEDREAID]	= CASE WHEN CAST(PARSENAME(replace(@RESOURCE_LID, '_','.'), 2) AS int)  > 0 THEN CAST(PARSENAME(replace(@RESOURCE_LID, '_','.'), 2) AS int)  ELSE CAST(PARSENAME(replace(@RESOURCE_LID, '_','.'), 1) AS int) END--<MEDREAID int >
+		 ,[HORREQID]	= @HORREQID--(SELECT TOP 1 AUX.COL3 AS LIVRO FROM ##AUX_2 AUX INNER JOIN TT_RESERVATIONS_TMP T ON AUX.APP_LID = T.APP_LID) --CAST(@app_lid AS int)--<HORREQID int >
+		 ,[ENCAIXE]	= 'F'--<ENCAIXE varchar(1) >
+		 ,[COMPARECEU]= 'F'--<COMPARECEU varchar(1) >
+		 ,[PREFAGEID]= '19'--<PREFAGEID int >
+		 ,[STATUS] = 'O'--<STATUS varchar(1) >
+		 ,[MOTIVOBLOQUEIO] = ''--<MOTIVOBLOQUEIO varchar(60) >
+		 ,[MASTERHORA] =	 NULL--<MASTERHORA int >
+		 ,[DUPLICAR]	= 'T'--<DUPLICAR varchar(1) >
+		 ,[RESHORA]	= GETDATE()--<RESHORA datetime >
+		 ,[RESUSUARIO] = 'tuotempo'--<RESUSUARIO varchar(60) >
+		 ,[USUARIO] = 482--<USUARIO int >
+		 ,[CONFIRMADO] = 'F'--<CONFIRMADO varchar(1) >
+		 ,[ULTIMO_USUARIO] = 482--<ULTIMO_USUARIO int >
+		 ,[CONFIRMOU_USUARIO] = NULL--<CONFIRMOU_USUARIO int >
+		 --,[EQUIPAMENTOID] = @location_lid--<EQUIPAMENTOID int >
+		 ,[HORACHEGOU] = NULL--<HORACHEGOU int >
+		 ,[REALIZADO] = 'F'--<REALIZADO varchar(1) >
+		 ,[CONFIRMOU_DATA] = NULL--<CONFIRMOU_DATA datetime >
+		 ,[CONFIRMOU_HORA]= NULL--<CONFIRMOU_HORA int >
+		 ,[USUARIO_BLOQUEOU]	= NULL--<USUARIO_BLOQUEOU int >
+		 ,[USUARIO_DESBLOQUEOU]	= NULL--<USUARIO_DESBLOQUEOU int >
+		 ,[DATAULTIMAATUALIZACAO] = GETDATE()--<DATAULTIMAATUALIZACAO datetime >
+		 ,[HORAULTIMAATUALIZACAO] = ' ' -- VERIFICAR CONVERSAO @insert_time--<HORAULTIMAATUALIZACAO int >
+		 ,[observbloq] = 'insert'--<observbloq text >
+		 ,[obsid] =  NULL--<obsid int >
+		 ,[medintervalo]	= NULL--<medintervalo int >
+		 ,[ANTECIPAR] =  'F'--<ANTECIPAR char(1) >
+		 ,[CONTADOR_INTERVALO] = 123--<CONTADOR_INTERVALO int >
+		 ,[INTERVALO] = 20--<INTERVALO int >
+		 from inserted I
+WHERE 
+		
+		LIVROID = @LIVRO AND
+		DATA = @APP_DATE AND
+		HORA = @HORA
+
+
+		/*
+				
+INSERT INTO [dbo].[HORARIOSREQUISICAO]
+           ([UNIDADEID]
+           ,[HORREQID]
+           ,[DATAAGENDAMENTO]
+           ,[HORAAGENDAMENTO]
+           ,[PACIENTEID]
+           ,[DDD]
+           ,[FONE]
+           ,[FONETIPO]
+           ,[FAX]
+           ,[COMPLEMENTOID]
+           ,[GUIA]
+           ,[SENHAEXAME]
+           ,[MEDSOLID]
+           ,[UNIDADEPACIENTEID])
+     VALUES(
+         @LOCATION_LID, -- UNIDADEID 
+		 (SELECT MAX(HORREQID)+ 1 FROM HORARIOSREQUISICAO),-- PARSENAME(replace(@APP_LID, '_','.'), 1), --HORREQID
+		 @APP_DATE, -- DATAAGENDAMENTO
+		 @HORA, --HORAAGENDAMENTO 
+		 @PACIENTEID, --PACIENTEID 
+		 NULL, --DDD
+		 NULL, --FONE =
+		 NULL, -- FONETIPO 
+		 NULL, -- FAX
+		 2,--COMPLEMENTOID 
+		 ' ', --GUIA 
+		 ' ', --SENHAEXAME
+		 0, --MEDSOLID 
+		 0 -- UNIDADEPACIENTEID 		
+		)
+
+
+-- INSERINDO OBSERVACAO DO AGENDAMENTO	
+INSERT INTO [dbo].[HORARIOSDADOS]
+           ([LIVROID]
+           ,[DATA]
+           ,[HORA]
+           ,[CONTADOR]
+           ,[MEDSOLID]
+           ,[CONVENIOID]
+           ,[PLANOID]
+           ,[PROCEDENCIAID]
+           ,[OBS]
+           ,[OBSID]
+           ,[CONVENIOASSOCIADOID]
+           ,[FRANQUIAID])
+     VALUES
+           (
+		   @LIVRO--<LIVROID, int,>
+           ,@APP_DATE --<DATA, datetime,>
+           ,@HORA--<HORA, int,>
+           ,0--<CONTADOR, int,>
+           ,0--<MEDSOLID, int,>
+           ,PARSENAME(replace(@INSURANCE_LID, '_','.'), 3)--<CONVENIOID, int,>
+           ,PARSENAME(replace(@INSURANCE_LID, '_','.'), 1)--<PLANOID, int,>
+           ,11--<PROCEDENCIAID, int,>
+           ,'AGENDADO PELO TUOTEMPO'--<OBS, text,>
+           ,1--<OBSID, int,>
+           ,0--<CONVENIOASSOCIADOID, int,>
+           ,0--<FRANQUIAID, int,>
+		   )
+
+
+
+
+-- INSERINDO EXAME X HORARIOS
+
+INSERT INTO [dbo].[HORARIOSEXAMES]
+           ([LIVROID]
+           ,[DATA]
+           ,[HORA]
+           ,[CONTADOR]
+           ,[EXAMEINDICE]
+           ,[PROCID]
+           ,[GUIA]
+           ,[SENHA])
+     VALUES
+           (
+		   @LIVRO--<LIVROID, int,>
+           ,@APP_DATE --<DATA, datetime,>
+           ,@HORA--<HORA, int,>
+           ,0--<CONTADOR, int,>
+           ,0--<EXAMEINDICE, int,>
+           ,@ACTIVITY_LID--<PROCID, int,>
+           ,' '--<GUIA, varchar(30),>
+           ,' '--<SENHA, varchar(20),>
+		   )
+
+
+*/
+
+
+END
+/*FIM UPDATE*/
+
+
+
+
+END;
+
+
+
+GO
+
+
